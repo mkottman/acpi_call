@@ -1,5 +1,8 @@
-#include <acpi/acpi.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/proc_fs.h>
+#include <asm/uaccess.h>
+#include <acpi/acpi.h>
 
 MODULE_LICENSE("GPL");
 
