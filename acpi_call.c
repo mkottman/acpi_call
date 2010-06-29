@@ -10,7 +10,9 @@ extern struct proc_dir_entry *acpi_root_dir;
 
 static acpi_handle root_handle;
 
-static int do_acpi_call(const char * method, int len)
+static int last_result;
+
+static void do_acpi_call(const char * method)
 {
     acpi_status status;
     acpi_handle handle;
@@ -21,11 +23,12 @@ static int do_acpi_call(const char * method, int len)
     printk(KERN_INFO "acpi_call: Calling %s\n", method);
 
     status = acpi_get_handle(root_handle, (acpi_string) method, &handle);
+    last_result = 0;
 
     if (ACPI_FAILURE(status))
     {
         printk(KERN_ERR "acpi_call: Cannot get handle: %s\n", acpi_format_exception(status));
-        return -ENOSYS;
+        return;
     }
 
     // for now, parameterless functions only
@@ -40,16 +43,16 @@ static int do_acpi_call(const char * method, int len)
     if (ACPI_FAILURE(status))
     {
         printk(KERN_ERR "acpi_call: ATPX method call failed: %s\n", acpi_format_exception(status));
-        return -ENOSYS;
+        return;
     }
     kfree(buffer.pointer);
 
+    last_result = 1;
     printk(KERN_INFO "acpi_call: Call successful\n");
-    return len;
 }
 
 static int acpi_proc_write( struct file *filp, const char __user *buff,
-                        unsigned long len, void *data )
+    unsigned long len, void *data )
 {
     char input[256] = { '\0' };
 
@@ -65,20 +68,43 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     if (input[len-1] == '\n')
         input[len-1] = '\0';
 
-    return do_acpi_call(input, len);
+    do_acpi_call(input);
+    return len;
 }
 
+static int acpi_proc_read(char *page, char **start, off_t off,
+    int count, int *eof, void *data)
+{
+    int len = 0;
+
+    if (off > 0) {
+        *eof = 1;
+        return 0;
+    }
+
+    switch (last_result) {
+    case -1: len = sprintf(page, "not called"); break;
+    case 0: len = sprintf(page, "failed"); break;
+    case 1: len = sprintf(page, "ok"); break;
+    }
+    last_result = -1;
+
+    return len;
+}
 
 static int __init init_acpi_call(void)
 {
-    struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0222, acpi_root_dir);
-    
+    struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0666, acpi_root_dir);
+
+    last_result = -1;
+
     if (acpi_entry == NULL) {
       printk(KERN_ERR "acpi_call: Couldn't create proc entry\n");
       return -ENOMEM;
     }
-    
+
     acpi_entry->write_proc = acpi_proc_write;
+    acpi_entry->read_proc = acpi_proc_read;
     printk(KERN_INFO "acpi_call: Module loaded successfully\n");
 
     return 0;
