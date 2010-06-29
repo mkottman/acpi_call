@@ -1,0 +1,33 @@
+A kernel module that enables you to call parameterless ACPI methods by writing
+the method name to /proc/acpi/call, e.g. to turn off discrete graphics card in
+a dual graphics environment (like NVIDIA Optimus).
+
+Usage:
+
+# turn off discrete graphics card
+echo '\_SB.PCI0.PEG1.GFX0.DOFF' > /proc/acpi/call
+# turn it back on
+echo '\_SB.PCI0.PEG1.GFX0.DON' > /proc/acpi/call
+
+These work on my ASUS K52J notebook, but may not work for you. For a list of
+methods to try, see http://linux-hybrid-graphics.blogspot.com/ . It SHOULD be
+ok to test all of the methods, until you see a drop in battery drain rate
+(grep rate /proc/acpi/battery/BAT0/state), however it comes with NO WARRANTY.
+
+The status after a call can be read back from /proc/acpi/call:
+* 'not called' - nothing to report
+* 'failed' - the call failed
+* 'ok' - the call succeeded
+
+
+Copyright (c) 2010: Michal Kottman
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
