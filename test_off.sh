@@ -12,6 +12,7 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.XVR0.Z01I.DGOF
     \_SB.PCI0.PEGR.GFX0._OFF
     \_SB.PCI0.PEG.VID._OFF
+    \_SB.PCI0.P0P2.DGPU._OFF
     "
 
     for m in $methods; do
