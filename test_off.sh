@@ -3,6 +3,7 @@
 if lsmod | grep -q acpi_call; then
     methods="
     \_SB.PCI0.P0P1.VGA._OFF
+    \_SB.PCI0.P0P2.VGA._OFF
     \_SB_.PCI0.OVGA.ATPX
     \_SB_.PCI0.OVGA.XTPX
     \_SB.PCI0.P0P2.PEGP._OFF
@@ -14,6 +15,7 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.PEG.VID._OFF
     \_SB.PCI0.P0P2.DGPU._OFF
     \_SB.PCI0.IXVE.IGPU.DGOF
+    \_SB.PCI0.RP00.VGA._PS3
     "
 
     for m in $methods; do
