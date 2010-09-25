@@ -17,6 +17,7 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.IXVE.IGPU.DGOF
     \_SB.PCI0.RP00.VGA._PS3
     \_SB.PCI0.RP00.VGA.P3MO
+    \_SB.PCI0.GFX0.DSM._T_0
     "
 
     for m in $methods; do
