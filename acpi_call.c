@@ -10,7 +10,7 @@ MODULE_LICENSE("GPL");
 
 extern struct proc_dir_entry *acpi_root_dir;
 
-static acpi_handle root_handle;
+static char error_buffer[256];
 
 static int last_result;
 
@@ -33,7 +33,8 @@ static void do_acpi_call(const char * method)
 
     if (ACPI_FAILURE(status))
     {
-        printk(KERN_ERR "acpi_call: Cannot get handle: %s\n", acpi_format_exception(status));
+        strcpy(error_buffer, acpi_format_exception(status));
+        printk(KERN_ERR "acpi_call: Cannot get handle: %s\n", error_buffer);
         return;
     }
 
@@ -49,12 +50,15 @@ static void do_acpi_call(const char * method)
     status = acpi_evaluate_object(handle, NULL, &atpx_arg, &buffer);
     if (ACPI_FAILURE(status))
     {
-        printk(KERN_ERR "acpi_call: ATPX method call failed: %s\n", acpi_format_exception(status));
+        strcpy(error_buffer, acpi_format_exception(status));
+        printk(KERN_ERR "acpi_call: ATPX method call failed: %s\n", error_buffer);
         return;
     }
     kfree(buffer.pointer);
 
     last_result = 1;
+    error_buffer[0] = 0;
+
     printk(KERN_INFO "acpi_call: Call successful\n");
 }
 
@@ -99,7 +103,7 @@ static int acpi_proc_read(char *page, char **start, off_t off,
 
     switch (last_result) {
     case -1: len = sprintf(page, "not called"); break;
-    case 0: len = sprintf(page, "failed"); break;
+    case 0: len = sprintf(page, "failed: %s", error_buffer); break;
     case 1: len = sprintf(page, "ok"); break;
     }
     last_result = -1;
@@ -113,6 +117,7 @@ static int __init init_acpi_call(void)
     struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0666, acpi_root_dir);
 
     last_result = -1;
+    error_buffer[0] = 0;
 
     if (acpi_entry == NULL) {
       printk(KERN_ERR "acpi_call: Couldn't create proc entry\n");
