@@ -15,6 +15,9 @@ static acpi_handle root_handle;
 static int last_result;
 
 static void do_acpi_call(const char * method)
+/**
+@param method   The full name of ACPI method to call
+*/
 {
     acpi_status status;
     acpi_handle handle;
@@ -24,7 +27,8 @@ static void do_acpi_call(const char * method)
 
     printk(KERN_INFO "acpi_call: Calling %s\n", method);
 
-    status = acpi_get_handle(root_handle, (acpi_string) method, &handle);
+    // get the handle of the method, must be a fully qualified path
+    status = acpi_get_handle(NULL, (acpi_string) method, &handle);
     last_result = 0;
 
     if (ACPI_FAILURE(status))
@@ -41,6 +45,7 @@ static void do_acpi_call(const char * method)
     atpx_arg_elements[0].type = ACPI_TYPE_INTEGER;
     atpx_arg_elements[0].integer.value = 0;
 
+    // call the method
     status = acpi_evaluate_object(handle, NULL, &atpx_arg, &buffer);
     if (ACPI_FAILURE(status))
     {
@@ -53,6 +58,8 @@ static void do_acpi_call(const char * method)
     printk(KERN_INFO "acpi_call: Call successful\n");
 }
 
+/** procfs write callback. Called when writing into /proc/acpi/call.
+*/
 static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
 {
@@ -74,6 +81,12 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     return len;
 }
 
+/** procfs 'call' read callback. Called when reading the content of /proc/acpi/call.
+Returns the last call status:
+- "not called" when no call was previously issued
+- "failed" if the call failed
+- "ok" if the call succeeded
+*/
 static int acpi_proc_read(char *page, char **start, off_t off,
     int count, int *eof, void *data)
 {
@@ -94,6 +107,7 @@ static int acpi_proc_read(char *page, char **start, off_t off,
     return len;
 }
 
+/** module initialization function */
 static int __init init_acpi_call(void)
 {
     struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0666, acpi_root_dir);
