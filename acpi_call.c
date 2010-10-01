@@ -3,6 +3,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/proc_fs.h>
+#include <linux/slab.h>
 #include <asm/uaccess.h>
 #include <acpi/acpi.h>
 
@@ -14,14 +15,15 @@ static char error_buffer[256];
 
 static int last_result;
 
-static void do_acpi_call(const char * method)
 /**
 @param method   The full name of ACPI method to call
+@param argc     The number of parameters
+@param argv     A pre-allocated array of arguments of type acpi_object
 */
+static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
 {
     acpi_status status;
     acpi_handle handle;
-    union acpi_object atpx_arg_elements[1];
     struct acpi_object_list atpx_arg;
     struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
@@ -38,13 +40,9 @@ static void do_acpi_call(const char * method)
         return;
     }
 
-    // for now, parameterless functions only
-    atpx_arg.count = 0;
-    atpx_arg.pointer = &atpx_arg_elements[0];
-
-    // just to be sure
-    atpx_arg_elements[0].type = ACPI_TYPE_INTEGER;
-    atpx_arg_elements[0].integer.value = 0;
+    // prepare parameters
+    atpx_arg.count = argc;
+    atpx_arg.pointer = argv;
 
     // call the method
     status = acpi_evaluate_object(handle, NULL, &atpx_arg, &buffer);
@@ -62,12 +60,70 @@ static void do_acpi_call(const char * method)
     printk(KERN_INFO "acpi_call: Call successful\n");
 }
 
+/** Parses method name and arguments
+@param input Input string to be parsed. Modified in the process.
+@param nargs Set to number of arguments parsed (output)
+@param args 
+*/
+static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
+{
+    char *s = input;
+
+    *nargs = 0;
+    *args = NULL;
+
+    // the method name is separated from the arguments by a space
+    while (*s && *s != ' ') s++;
+    // if no space is found, return 0 arguments
+    if (*s == 0)
+        return input;
+
+    *args = (union acpi_object *) kmalloc(16 * sizeof(union acpi_object), GFP_KERNEL);
+
+    while (*s) {
+        if (*s == ' ') {
+            ++ *nargs;
+            ++ s;
+        } else {
+            union acpi_object *arg = (*args) + (*nargs - 1);
+            if (*s == '"') {
+                // decode string
+                arg->type = ACPI_TYPE_STRING;
+                arg->string.pointer = ++s;
+                arg->string.length = 0;
+                while (*s && *s != '"') {
+                    arg->string.length ++;
+                    ++s;
+                }
+                // skip the last "
+                ++s;
+            } else {
+                // decode integer, N or 0xN
+                arg->type = ACPI_TYPE_INTEGER;
+                if (s[0] == '0' && s[1] == 'x') {
+                    arg->integer.value = simple_strtol(s+2, 0, 16);
+                } else {
+                    arg->integer.value = simple_strtol(s, 0, 10);
+                }
+                while (*s && *s != ' ') {
+                    ++s;
+                }
+            }
+        }
+    }
+
+    return input;
+}
+
 /** procfs write callback. Called when writing into /proc/acpi/call.
 */
 static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
 {
-    char input[256] = { '\0' };
+    char input[512] = { '\0' };
+    union acpi_object *args;
+    int nargs;
+    char *method;
 
     if (len > sizeof(input) - 1) {
         printk(KERN_ERR "acpi_call: Input too long! (%lu)\n", len);
@@ -81,7 +137,12 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     if (input[len-1] == '\n')
         input[len-1] = '\0';
 
-    do_acpi_call(input);
+    method = parse_acpi_args(input, &nargs, &args);
+    do_acpi_call(method, nargs, args);
+    if (args) {
+        kfree(args);
+    }
+
     return len;
 }
 
@@ -130,7 +191,6 @@ static int __init init_acpi_call(void)
 
     return 0;
 }
-
 
 static void unload_acpi_call(void)
 {
