@@ -24,12 +24,15 @@ if lsmod | grep -q acpi_call; then
         echo -n "Trying $m: "
         echo $m > /proc/acpi/call
         result=$(cat /proc/acpi/call)
-        if [ $result = "ok" ]; then
+        case "$result" in
+        "ok")
             echo "works!"
             break
-        elif [ $result = "failed" ]; then
+        ;;
+        *)
             echo "failed"
-        fi
+        ;;
+        esac
     done
 else
     echo 'The acpi_call module is not loaded'
