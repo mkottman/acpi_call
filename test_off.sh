@@ -25,12 +25,12 @@ if lsmod | grep -q acpi_call; then
         echo $m > /proc/acpi/call
         result=$(cat /proc/acpi/call)
         case "$result" in
-        "ok")
-            echo "works!"
-            break
+        Error*)
+            echo "failed"
         ;;
         *)
-            echo "failed"
+            echo "works!"
+            break
         ;;
         esac
     done

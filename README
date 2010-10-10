@@ -16,8 +16,10 @@ ok to test all of the methods, until you see a drop in battery drain rate
 
 The status after a call can be read back from /proc/acpi/call:
 * 'not called' - nothing to report
-* 'failed' - the call failed
-* 'ok' - the call succeeded
+* 'Error: <description>' - the call failed
+* '0xNN' - the call succeeded, and returned an integer
+* '"..."' - the call succeeded, and returned a string
+* '{0xNN, ...}' - the call succeeded, and returned a buffer
 
 
 Copyright (c) 2010: Michal Kottman
