@@ -113,10 +113,8 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 arg->type = ACPI_TYPE_STRING;
                 arg->string.pointer = ++s;
                 arg->string.length = 0;
-                while (*s && *s++ != '"') {
+                while (*s && *s++ != '"')
                     arg->string.length ++;
-                    ++s;
-                }
                 // skip the last "
                 ++s;
             } else if (*s == 'b') {
