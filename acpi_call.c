@@ -24,7 +24,7 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
 {
     acpi_status status;
     acpi_handle handle;
-    struct acpi_object_list atpx_arg;
+    struct acpi_object_list arg;
     struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
     printk(KERN_INFO "acpi_call: Calling %s\n", method);
@@ -41,15 +41,15 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     }
 
     // prepare parameters
-    atpx_arg.count = argc;
-    atpx_arg.pointer = argv;
+    arg.count = argc;
+    arg.pointer = argv;
 
     // call the method
-    status = acpi_evaluate_object(handle, NULL, &atpx_arg, &buffer);
+    status = acpi_evaluate_object(handle, NULL, &arg, &buffer);
     if (ACPI_FAILURE(status))
     {
         strcpy(error_buffer, acpi_format_exception(status));
-        printk(KERN_ERR "acpi_call: ATPX method call failed: %s\n", error_buffer);
+        printk(KERN_ERR "acpi_call: Method call failed: %s\n", error_buffer);
         return;
     }
     kfree(buffer.pointer);
@@ -59,6 +59,14 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
 
     printk(KERN_INFO "acpi_call: Call successful\n");
 }
+
+/** Decodes 2 hex characters to a 
+*/
+u8 decodeHex(char *hex) {
+    char buf[3] = { hex[0], hex[1], 0};
+    return (u8) simple_strtoul(buf, NULL, 16);
+}
+
 
 /** Parses method name and arguments
 @param input Input string to be parsed. Modified in the process.
@@ -97,6 +105,31 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 }
                 // skip the last "
                 ++s;
+            } else if (*s == 'b') {
+                // decode buffer
+                char *p = ++s;
+                int len = 0, i;
+                u8 *buf = NULL;
+                
+                while (*p && *p!=' ')
+                    p++;
+                
+                len = p - s;
+                if (len % 2 == 1) {
+                    printk(KERN_ERR "acpi_call: buffer arg%d is not multiple of 8 bits\n", *nargs);
+                    return NULL;
+                }
+                len /= 2;
+
+                buf = (u8*) kmalloc(len, GFP_KERNEL);
+                for (i=0; i<len; i++) {
+                    buf[i] = decodeHex(s + i*2);
+                }
+                s = p;
+
+                arg->type = ACPI_TYPE_BUFFER;
+                arg->buffer.pointer = buf;
+                arg->buffer.length = len;
             } else {
                 // decode integer, N or 0xN
                 arg->type = ACPI_TYPE_INTEGER;
@@ -122,7 +155,7 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
 {
     char input[512] = { '\0' };
     union acpi_object *args;
-    int nargs;
+    int nargs, i;
     char *method;
 
     if (len > sizeof(input) - 1) {
@@ -138,9 +171,14 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
         input[len-1] = '\0';
 
     method = parse_acpi_args(input, &nargs, &args);
-    do_acpi_call(method, nargs, args);
-    if (args) {
-        kfree(args);
+    if (method) {
+        do_acpi_call(method, nargs, args);
+        if (args) {
+            for (i=0; i<nargs; i++)
+                if (args[i].type == ACPI_TYPE_BUFFER)
+                    kfree(args[i].buffer.pointer);
+            kfree(args);
+        }
     }
 
     return len;
