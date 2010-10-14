@@ -16,18 +16,24 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.P0P2.DGPU._OFF
     \_SB.PCI0.IXVE.IGPU.DGOF
     \_SB.PCI0.RP00.VGA._PS3
+    \_SB.PCI0.RP00.VGA.P3MO
+    \_SB.PCI0.GFX0.DSM._T_0
+    \_SB.PCI0.LPC.EC.PUBS._OFF
     "
 
     for m in $methods; do
         echo -n "Trying $m: "
         echo $m > /proc/acpi/call
         result=$(cat /proc/acpi/call)
-        if [ $result = "ok" ]; then
+        case "$result" in
+        Error*)
+            echo "failed"
+        ;;
+        *)
             echo "works!"
             break
-        elif [ $result = "failed" ]; then
-            echo "failed"
-        fi
+        ;;
+        esac
     done
 else
     echo 'The acpi_call module is not loaded'
