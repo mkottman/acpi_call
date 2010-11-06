@@ -7,6 +7,7 @@ if lsmod | grep -q acpi_call; then
     \_SB_.PCI0.OVGA.ATPX
     \_SB_.PCI0.OVGA.XTPX
     \_SB.PCI0.P0P2.PEGP._OFF
+    \_SB.PCI0.P0P1.PEGP._OFF
     \_SB.PCI0.MXR0.MXM0._OFF
     \_SB.PCI0.PEG1.GFX0._OFF
     \_SB.PCI0.PEG1.GFX0.DOFF
