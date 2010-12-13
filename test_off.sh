@@ -16,6 +16,7 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.PEGR.GFX0._OFF
     \_SB.PCI0.PEG.VID._OFF
     \_SB.PCI0.P0P2.DGPU._OFF
+    \_SB.PCI0.P0P4.DGPU.DOFF
     \_SB.PCI0.IXVE.IGPU.DGOF
     \_SB.PCI0.RP00.VGA._PS3
     \_SB.PCI0.RP00.VGA.P3MO
