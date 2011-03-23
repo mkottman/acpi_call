@@ -11,6 +11,7 @@ if lsmod | grep -q acpi_call; then
     \_SB.PCI0.P0P1.PEGP._OFF
     \_SB.PCI0.MXR0.MXM0._OFF
     \_SB.PCI0.PEG1.GFX0._OFF
+    \_SB.PCI0.PEG0.GFX0.DOFF
     \_SB.PCI0.PEG1.GFX0.DOFF
     \_SB.PCI0.XVR0.Z01I.DGOF
     \_SB.PCI0.PEGR.GFX0._OFF
