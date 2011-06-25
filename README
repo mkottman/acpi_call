@@ -1,6 +1,6 @@
-A kernel module that enables you to call parameterless ACPI methods by writing
-the method name to /proc/acpi/call, e.g. to turn off discrete graphics card in
-a dual graphics environment (like NVIDIA Optimus).
+A kernel module that enables you to call ACPI methods by writing the method
+name followed by arguments to /proc/acpi/call, for example to turn off discrete
+graphics card in a dual graphics environment (like NVIDIA Optimus).
 
 Usage:
 
@@ -10,14 +10,27 @@ echo '\_SB.PCI0.PEG1.GFX0.DOFF' > /proc/acpi/call
 echo '\_SB.PCI0.PEG1.GFX0.DON' > /proc/acpi/call
 
 These work on my ASUS K52J notebook, but may not work for you. For a list of
-methods to try, see http://linux-hybrid-graphics.blogspot.com/ . It SHOULD be
-ok to test all of the methods, until you see a drop in battery drain rate
-(grep rate /proc/acpi/battery/BAT0/state), however it comes with NO WARRANTY.
+methods to try, see http://linux-hybrid-graphics.blogspot.com/ or try running
+the provided script test_off.sh
+
+It SHOULD be ok to test all of the methods, until you see a drop in battery
+drain rate (grep rate /proc/acpi/battery/BAT0/state), however it comes
+with NO WARRANTY.
+
+You can pass parameters to acpi_call by writing them after the method,
+separated by single space. Currently, you can pass the following parameter
+types:
+* ACPI_INTEGER - by writing NNN or 0xNNN, where NNN is an integer/hex
+* ACPI_STRING - by enclosing the string in quotes: "hello, world"
+* ACPI_BUFFER - by writing bXXXX, where XXXX is a hex string without spaces,
+                or by writing { b1, b2, b3, b4 }, where b1-4 are integers
 
 The status after a call can be read back from /proc/acpi/call:
 * 'not called' - nothing to report
-* 'failed' - the call failed
-* 'ok' - the call succeeded
+* 'Error: <description>' - the call failed
+* '0xNN' - the call succeeded, and returned an integer
+* '"..."' - the call succeeded, and returned a string
+* '{0xNN, ...}' - the call succeeded, and returned a buffer
 
 
 Copyright (c) 2010: Michal Kottman

@@ -8,3 +8,7 @@ default:
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+load:
+	-sudo /sbin/rmmod acpi_call
+	sudo /sbin/insmod acpi_call.ko
