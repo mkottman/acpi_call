@@ -3,7 +3,10 @@ name followed by arguments to /proc/acpi/call.
 
 Usage:
 
-echo '<call>' > /proc/acpi/call
+    echo '<call>' | sudo tee /proc/acpi/call
+You can then retrieve the result of the call by checking your dmesg or:
+
+    sudo cat /proc/acpi/call
 
 You can pass parameters to acpi_call by writing them after the method,
 separated by single space. Currently, you can pass the following parameter
