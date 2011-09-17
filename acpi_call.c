@@ -247,7 +247,7 @@ static int acpi_proc_read(char *page, char **start, off_t off,
 /** module initialization function */
 static int __init init_acpi_call(void)
 {
-    struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0666, acpi_root_dir);
+    struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0660, acpi_root_dir);
 
     strcpy(result_buffer, "not called");
 
