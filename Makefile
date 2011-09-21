@@ -11,5 +11,5 @@ clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 load:
-    -/sbin/rmmod acpi_call
-    /sbin/insmod acpi_call.ko
+	-/sbin/rmmod acpi_call
+	/sbin/insmod acpi_call.ko
