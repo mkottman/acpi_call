@@ -159,8 +159,13 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 arg->buffer.pointer = buf;
                 arg->buffer.length = 0;
                 while (*s && *s++ != '}') {
-                    if (buf >= temporary_buffer + sizeof(temporary_buffer))
-                        printk(KERN_ERR "buffer full\n");
+                    if (buf >= temporary_buffer + sizeof(temporary_buffer)) {
+                        printk(KERN_ERR "acpi_call: buffer arg%d is truncated because the buffer is full\n", *nargs);
+                        // clear remaining arguments
+                        while (*s && *s != '}')
+                            ++s;
+                        break;
+                    }
                     else if (*s >= '0' && *s <= '9') {
                         // decode integer into buffer
                         arg->buffer.length ++;
