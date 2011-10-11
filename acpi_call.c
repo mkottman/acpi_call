@@ -205,7 +205,7 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
 {
-    char input[512] = { '\0' };
+    char input[2 * BUFFER_SIZE] = { '\0' };
     union acpi_object *args;
     int nargs, i;
     char *method;
