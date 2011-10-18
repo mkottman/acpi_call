@@ -9,11 +9,13 @@
 
 MODULE_LICENSE("GPL");
 
+#define BUFFER_SIZE 256
+
 extern struct proc_dir_entry *acpi_root_dir;
 
-static char result_buffer[256];
+static char result_buffer[BUFFER_SIZE];
 
-static u8 temporary_buffer[256];
+static u8 temporary_buffer[BUFFER_SIZE];
 
 /**
 @param method   The full name of ACPI method to call
@@ -35,7 +37,7 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
 
     if (ACPI_FAILURE(status))
     {
-        sprintf(result_buffer, "Error: %s", acpi_format_exception(status));
+        snprintf(result_buffer, BUFFER_SIZE, "Error: %s", acpi_format_exception(status));
         printk(KERN_ERR "acpi_call: Cannot get handle: %s\n", result_buffer);
         return;
     }
@@ -48,7 +50,7 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     status = acpi_evaluate_object(handle, NULL, &arg, &buffer);
     if (ACPI_FAILURE(status))
     {
-        sprintf(result_buffer, "Error: %s", acpi_format_exception(status));
+        snprintf(result_buffer, BUFFER_SIZE, "Error: %s", acpi_format_exception(status));
         printk(KERN_ERR "acpi_call: Method call failed: %s\n", result_buffer);
         return;
     }
@@ -56,14 +58,22 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     if (result->type == ACPI_TYPE_INTEGER) {
     	sprintf(result_buffer, "0x%x", (int)result->integer.value);
     } else if (result->type == ACPI_TYPE_STRING) {
-        sprintf(result_buffer, "\"%*s\"", result->string.length, result->string.pointer);
+        snprintf(result_buffer, BUFFER_SIZE, "\"%*s\"", result->string.length, result->string.pointer);
     } else if (result->type == ACPI_TYPE_BUFFER) {
         int i;
+        int show_values = result->buffer.length;
+        // do not store more than data if it does not fit. The first element is
+        // just 4 chars, but there is also two bytes from the curly brackets
+        if (show_values > BUFFER_SIZE / 6)
+            show_values = BUFFER_SIZE / 6;
+
         sprintf(result_buffer, "{");
-        for (i = 0; i < result->buffer.length; i++)
+        for (i = 0; i < show_values; i++)
             sprintf(result_buffer + strlen(result_buffer),
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
-        strcpy(result_buffer + strlen(result_buffer), "}");
+        // if data was truncated, show a trailing comma
+        strcpy(result_buffer + strlen(result_buffer),
+            result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
     } else {
         sprintf(result_buffer, "Object type 0x%x\n", result->type);
     }
@@ -149,8 +159,13 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 arg->buffer.pointer = buf;
                 arg->buffer.length = 0;
                 while (*s && *s++ != '}') {
-                    if (buf >= temporary_buffer + sizeof(temporary_buffer))
-                        printk(KERN_ERR "buffer full\n");
+                    if (buf >= temporary_buffer + sizeof(temporary_buffer)) {
+                        printk(KERN_ERR "acpi_call: buffer arg%d is truncated because the buffer is full\n", *nargs);
+                        // clear remaining arguments
+                        while (*s && *s != '}')
+                            ++s;
+                        break;
+                    }
                     else if (*s >= '0' && *s <= '9') {
                         // decode integer into buffer
                         arg->buffer.length ++;
@@ -190,7 +205,7 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
 {
-    char input[512] = { '\0' };
+    char input[2 * BUFFER_SIZE] = { '\0' };
     union acpi_object *args;
     int nargs, i;
     char *method;
