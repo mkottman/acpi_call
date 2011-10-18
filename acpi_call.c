@@ -278,9 +278,10 @@ static int __init init_acpi_call(void)
     return 0;
 }
 
-static void unload_acpi_call(void)
+static void __exit unload_acpi_call(void)
 {
     remove_proc_entry("call", acpi_root_dir);
+    printk(KERN_INFO "acpi_call: Module unloaded successfully\n");
 }
 
 module_init(init_acpi_call);
