@@ -17,6 +17,34 @@ static char result_buffer[BUFFER_SIZE];
 
 static u8 temporary_buffer[BUFFER_SIZE];
 
+/** Appends the contents of an acpi_object to the result buffer
+@param result	An acpi object holding result data
+*/
+static void acpi_result_to_string(union acpi_object *result) {
+	if (result->type == ACPI_TYPE_INTEGER) {
+    	sprintf(result_buffer, "0x%x", (int)result->integer.value);
+    } else if (result->type == ACPI_TYPE_STRING) {
+        snprintf(result_buffer, BUFFER_SIZE, "\"%*s\"", result->string.length, result->string.pointer);
+    } else if (result->type == ACPI_TYPE_BUFFER) {
+        int i;
+        int show_values = result->buffer.length;
+        // do not store more than data if it does not fit. The first element is
+        // just 4 chars, but there is also two bytes from the curly brackets
+        if (show_values > BUFFER_SIZE / 6)
+            show_values = BUFFER_SIZE / 6;
+
+        sprintf(result_buffer, "{");
+        for (i = 0; i < show_values; i++)
+            sprintf(result_buffer + strlen(result_buffer),
+                i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
+        // if data was truncated, show a trailing comma
+        strcpy(result_buffer + strlen(result_buffer),
+            result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
+    } else {
+        sprintf(result_buffer, "Object type 0x%x\n", result->type);
+    }
+}
+
 /**
 @param method   The full name of ACPI method to call
 @param argc     The number of parameters
@@ -28,7 +56,6 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     acpi_handle handle;
     struct acpi_object_list arg;
     struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-    union acpi_object *result;
 
     printk(KERN_INFO "acpi_call: Calling %s\n", method);
 
@@ -54,29 +81,7 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
         printk(KERN_ERR "acpi_call: Method call failed: %s\n", result_buffer);
         return;
     }
-    result = buffer.pointer;
-    if (result->type == ACPI_TYPE_INTEGER) {
-    	sprintf(result_buffer, "0x%x", (int)result->integer.value);
-    } else if (result->type == ACPI_TYPE_STRING) {
-        snprintf(result_buffer, BUFFER_SIZE, "\"%*s\"", result->string.length, result->string.pointer);
-    } else if (result->type == ACPI_TYPE_BUFFER) {
-        int i;
-        int show_values = result->buffer.length;
-        // do not store more than data if it does not fit. The first element is
-        // just 4 chars, but there is also two bytes from the curly brackets
-        if (show_values > BUFFER_SIZE / 6)
-            show_values = BUFFER_SIZE / 6;
-
-        sprintf(result_buffer, "{");
-        for (i = 0; i < show_values; i++)
-            sprintf(result_buffer + strlen(result_buffer),
-                i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
-        // if data was truncated, show a trailing comma
-        strcpy(result_buffer + strlen(result_buffer),
-            result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
-    } else {
-        sprintf(result_buffer, "Object type 0x%x\n", result->type);
-    }
+    acpi_result_to_string(buffer.pointer);
     kfree(buffer.pointer);
 
     printk(KERN_INFO "acpi_call: Call successful: %s\n", result_buffer);
