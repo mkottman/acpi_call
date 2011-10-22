@@ -47,12 +47,12 @@ static int acpi_result_to_string(union acpi_object *result) {
             sprintf(get_buffer_end(),
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
 
-        if (result->buffer.length > BUFFER_SIZE / 6) {
-            // if data was truncated, show a trailing comma
-            sprintf(get_buffer_end(), ",");
+        if (result->buffer.length > show_values) {
+            // if data was truncated, show a trailing comma if there is space
+            snprintf(get_buffer_end(), get_avail_bytes(), ",");
             return 1;
         } else {
-            // in case the show_value == 0, but the buffer is too small to hold
+            // in case show_values == 0, but the buffer is too small to hold
             // more values (i.e. the buffer cannot have anything more than "{")
             snprintf(get_buffer_end(), get_avail_bytes(), "}");
         }
