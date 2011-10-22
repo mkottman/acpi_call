@@ -20,7 +20,7 @@ static u8 temporary_buffer[BUFFER_SIZE];
 static size_t get_avail_bytes(void) {
     return BUFFER_SIZE - strlen(result_buffer);
 }
-static u8 *get_buffer_end(void) {
+static char *get_buffer_end(void) {
     return result_buffer + strlen(result_buffer);
 }
 /** Appends the contents of an acpi_object to the result buffer
