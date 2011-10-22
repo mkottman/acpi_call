@@ -19,17 +19,21 @@ static u8 temporary_buffer[BUFFER_SIZE];
 
 /** Appends the contents of an acpi_object to the result buffer
 @param result   An acpi object holding result data
+@returns        0 if the result could fully be saved, a higher value otherwise
 */
-static void acpi_result_to_string(union acpi_object *result) {
+static int acpi_result_to_string(union acpi_object *result) {
 
 #define BUFFER (result_buffer + strlen(result_buffer))
 #define BYTES_AVAIL (BUFFER_SIZE - strlen(result_buffer))
 
+    int not_written = 0;
+
     if (result->type == ACPI_TYPE_INTEGER) {
-        snprintf(BUFFER, BYTES_AVAIL, "0x%x", (int)result->integer.value);
+        not_written = snprintf(BUFFER, BYTES_AVAIL,
+            "0x%x", (int)result->integer.value);
     } else if (result->type == ACPI_TYPE_STRING) {
-        snprintf(BUFFER, BYTES_AVAIL, "\"%*s\"", result->string.length,
-                 result->string.pointer);
+        not_written = snprintf(BUFFER, BYTES_AVAIL,
+            "\"%*s\"", result->string.length, result->string.pointer);
     } else if (result->type == ACPI_TYPE_BUFFER) {
         int i;
         int show_values = result->buffer.length;
@@ -43,13 +47,19 @@ static void acpi_result_to_string(union acpi_object *result) {
             sprintf(BUFFER,
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
 
-        if (BYTES_AVAIL > 0)
+        if (result->buffer.length > BUFFER_SIZE / 6) {
             // if data was truncated, show a trailing comma
-            strcpy(result_buffer + strlen(result_buffer),
-                   result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
+            sprintf(BUFFER, ",");
+            not_written++;
+        } else {
+            sprintf(BUFFER, "}");
+        }
     } else {
-        snprintf(BUFFER, BYTES_AVAIL, "Object type 0x%x\n", result->type);
+        not_written = snprintf(BUFFER, BYTES_AVAIL,
+            "Object type 0x%x\n", result->type);
     }
+
+    return not_written;
 #undef BUFFER
 #undef BYTES_AVAIL
 }
