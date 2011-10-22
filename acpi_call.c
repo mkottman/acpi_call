@@ -54,6 +54,17 @@ static int acpi_result_to_string(union acpi_object *result) {
         } else {
             sprintf(BUFFER, "}");
         }
+    } else if (result->type == ACPI_TYPE_PACKAGE) {
+        int i;
+        sprintf(BUFFER, "[");
+        for (i=0; i<result->package.count; i++) {
+            not_written = acpi_result_to_string(&result->package.elements[i]);
+            // abort if not all data fits in it
+            if (not_written > 0)
+                break;
+        }
+        if (!not_written)
+            not_written = snprintf(BUFFER, BYTES_AVAIL, "]");
     } else {
         not_written = snprintf(BUFFER, BYTES_AVAIL,
             "Object type 0x%x\n", result->type);
