@@ -17,64 +17,64 @@ static char result_buffer[BUFFER_SIZE];
 
 static u8 temporary_buffer[BUFFER_SIZE];
 
+static size_t get_avail_bytes(void) {
+    return BUFFER_SIZE - strlen(result_buffer);
+}
+static u8 *get_buffer_end(void) {
+    return result_buffer + strlen(result_buffer);
+}
 /** Appends the contents of an acpi_object to the result buffer
 @param result   An acpi object holding result data
 @returns        0 if the result could fully be saved, a higher value otherwise
 */
 static int acpi_result_to_string(union acpi_object *result) {
-
-#define BUFFER (result_buffer + strlen(result_buffer))
-#define BYTES_AVAIL (BUFFER_SIZE - strlen(result_buffer))
-
     if (result->type == ACPI_TYPE_INTEGER) {
-        snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(get_buffer_end(), get_avail_bytes(),
             "0x%x", (int)result->integer.value);
     } else if (result->type == ACPI_TYPE_STRING) {
-        snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(get_buffer_end(), get_avail_bytes(),
             "\"%*s\"", result->string.length, result->string.pointer);
     } else if (result->type == ACPI_TYPE_BUFFER) {
         int i;
         int show_values = result->buffer.length;
         // do not store more than data if it does not fit. The first element is
         // just 4 chars, but there is also two bytes from the curly brackets
-        if (show_values > BYTES_AVAIL / 6)
-            show_values = BYTES_AVAIL / 6;
+        if (show_values > get_avail_bytes() / 6)
+            show_values = get_avail_bytes() / 6;
 
-        sprintf(BUFFER, "{");
+        sprintf(get_buffer_end(), "{");
         for (i = 0; i < show_values; i++)
-            sprintf(BUFFER,
+            sprintf(get_buffer_end(),
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
 
         if (result->buffer.length > BUFFER_SIZE / 6) {
             // if data was truncated, show a trailing comma
-            sprintf(BUFFER, ",");
+            sprintf(get_buffer_end(), ",");
             return 1;
         } else {
             // in case the show_value == 0, but the buffer is too small to hold
             // more values (i.e. the buffer cannot have anything more than "{")
-            snprintf(BUFFER, BYTES_AVAIL, "}");
+            snprintf(get_buffer_end(), get_avail_bytes(), "}");
         }
     } else if (result->type == ACPI_TYPE_PACKAGE) {
         int i;
-        sprintf(BUFFER, "[");
+        sprintf(get_buffer_end(), "[");
         for (i=0; i<result->package.count; i++) {
             if (i > 0)
-                snprintf(BUFFER, BYTES_AVAIL, ", ");
+                snprintf(get_buffer_end(), get_avail_bytes(), ", ");
 
             // abort if there is no more space available
-            if (!BYTES_AVAIL || acpi_result_to_string(&result->package.elements[i]))
+            if (!get_avail_bytes() || acpi_result_to_string(&result->package.elements[i]))
                 return 1;
         }
-        snprintf(BUFFER, BYTES_AVAIL, "]");
+        snprintf(get_buffer_end(), get_avail_bytes(), "]");
     } else {
-        snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(get_buffer_end(), get_avail_bytes(),
             "Object type 0x%x\n", result->type);
     }
 
     // return 0 if there are still bytes available, 1 otherwise
-    return !BYTES_AVAIL;
-#undef BUFFER
-#undef BYTES_AVAIL
+    return !get_avail_bytes();
 }
 
 /**
