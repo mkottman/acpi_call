@@ -26,8 +26,6 @@ static int acpi_result_to_string(union acpi_object *result) {
 #define BUFFER (result_buffer + strlen(result_buffer))
 #define BYTES_AVAIL (BUFFER_SIZE - strlen(result_buffer))
 
-    int not_written = 0;
-
     if (result->type == ACPI_TYPE_INTEGER) {
         snprintf(BUFFER, BYTES_AVAIL,
             "0x%x", (int)result->integer.value);
@@ -50,7 +48,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         if (result->buffer.length > BUFFER_SIZE / 6) {
             // if data was truncated, show a trailing comma
             sprintf(BUFFER, ",");
-            not_written++;
+            return 1;
         } else {
             // in case the show_value == 0, but the buffer is too small to hold
             // more values (i.e. the buffer cannot have anything more than "{")
@@ -60,22 +58,21 @@ static int acpi_result_to_string(union acpi_object *result) {
         int i;
         sprintf(BUFFER, "[");
         for (i=0; i<result->package.count; i++) {
-            not_written = acpi_result_to_string(&result->package.elements[i]);
-            // abort if not all data fits in it
-            if (not_written > 0)
-                break;
+            if (i > 0)
+                snprintf(BUFFER, BYTES_AVAIL, ", ");
+
+            // abort if there is no more space available
+            if (!BYTES_AVAIL || acpi_result_to_string(&result->package.elements[i]))
+                return 1;
         }
-        if (!not_written)
-            snprintf(BUFFER, BYTES_AVAIL, "]");
+        snprintf(BUFFER, BYTES_AVAIL, "]");
     } else {
         snprintf(BUFFER, BYTES_AVAIL,
             "Object type 0x%x\n", result->type);
     }
 
-    if (!not_written && !BYTES_AVAIL)
-        not_written++;
-
-    return not_written;
+    // return 0 if there are still bytes available, 1 otherwise
+    return !BYTES_AVAIL;
 #undef BUFFER
 #undef BYTES_AVAIL
 }
