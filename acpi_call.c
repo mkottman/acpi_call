@@ -52,7 +52,9 @@ static int acpi_result_to_string(union acpi_object *result) {
             sprintf(BUFFER, ",");
             not_written++;
         } else {
-            sprintf(BUFFER, "}");
+            // in case the show_value == 0, but the buffer is too small to hold
+            // more values (i.e. the buffer cannot have anything more than "{")
+            snprintf(BUFFER, BYTES_AVAIL, "}");
         }
     } else if (result->type == ACPI_TYPE_PACKAGE) {
         int i;
