@@ -29,10 +29,10 @@ static int acpi_result_to_string(union acpi_object *result) {
     int not_written = 0;
 
     if (result->type == ACPI_TYPE_INTEGER) {
-        not_written = snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(BUFFER, BYTES_AVAIL,
             "0x%x", (int)result->integer.value);
     } else if (result->type == ACPI_TYPE_STRING) {
-        not_written = snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(BUFFER, BYTES_AVAIL,
             "\"%*s\"", result->string.length, result->string.pointer);
     } else if (result->type == ACPI_TYPE_BUFFER) {
         int i;
@@ -64,11 +64,14 @@ static int acpi_result_to_string(union acpi_object *result) {
                 break;
         }
         if (!not_written)
-            not_written = snprintf(BUFFER, BYTES_AVAIL, "]");
+            snprintf(BUFFER, BYTES_AVAIL, "]");
     } else {
-        not_written = snprintf(BUFFER, BYTES_AVAIL,
+        snprintf(BUFFER, BYTES_AVAIL,
             "Object type 0x%x\n", result->type);
     }
+
+    if (!not_written && !BYTES_AVAIL)
+        not_written++;
 
     return not_written;
 #undef BUFFER
