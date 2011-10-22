@@ -18,31 +18,40 @@ static char result_buffer[BUFFER_SIZE];
 static u8 temporary_buffer[BUFFER_SIZE];
 
 /** Appends the contents of an acpi_object to the result buffer
-@param result	An acpi object holding result data
+@param result   An acpi object holding result data
 */
 static void acpi_result_to_string(union acpi_object *result) {
-	if (result->type == ACPI_TYPE_INTEGER) {
-    	sprintf(result_buffer, "0x%x", (int)result->integer.value);
+
+#define BUFFER (result_buffer + strlen(result_buffer))
+#define BYTES_AVAIL (BUFFER_SIZE - strlen(result_buffer))
+
+    if (result->type == ACPI_TYPE_INTEGER) {
+        snprintf(BUFFER, BYTES_AVAIL, "0x%x", (int)result->integer.value);
     } else if (result->type == ACPI_TYPE_STRING) {
-        snprintf(result_buffer, BUFFER_SIZE, "\"%*s\"", result->string.length, result->string.pointer);
+        snprintf(BUFFER, BYTES_AVAIL, "\"%*s\"", result->string.length,
+                 result->string.pointer);
     } else if (result->type == ACPI_TYPE_BUFFER) {
         int i;
         int show_values = result->buffer.length;
         // do not store more than data if it does not fit. The first element is
         // just 4 chars, but there is also two bytes from the curly brackets
-        if (show_values > BUFFER_SIZE / 6)
-            show_values = BUFFER_SIZE / 6;
+        if (show_values > BYTES_AVAIL / 6)
+            show_values = BYTES_AVAIL / 6;
 
-        sprintf(result_buffer, "{");
+        sprintf(BUFFER, "{");
         for (i = 0; i < show_values; i++)
-            sprintf(result_buffer + strlen(result_buffer),
+            sprintf(BUFFER,
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
-        // if data was truncated, show a trailing comma
-        strcpy(result_buffer + strlen(result_buffer),
-            result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
+
+        if (BYTES_AVAIL > 0)
+            // if data was truncated, show a trailing comma
+            strcpy(result_buffer + strlen(result_buffer),
+                   result->buffer.length > BUFFER_SIZE / 6 ? "," : "}");
     } else {
-        sprintf(result_buffer, "Object type 0x%x\n", result->type);
+        snprintf(BUFFER, BYTES_AVAIL, "Object type 0x%x\n", result->type);
     }
+#undef BUFFER
+#undef BYTES_AVAIL
 }
 
 /**
@@ -81,6 +90,9 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
         printk(KERN_ERR "acpi_call: Method call failed: %s\n", result_buffer);
         return;
     }
+
+    // reset the result buffer
+    *result_buffer = '\0';
     acpi_result_to_string(buffer.pointer);
     kfree(buffer.pointer);
 
