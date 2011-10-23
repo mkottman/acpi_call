@@ -22,6 +22,8 @@ The status after a call can be read back from /proc/acpi/call:
 * '0xNN' - the call succeeded, and returned an integer
 * '"..."' - the call succeeded, and returned a string
 * '{0xNN, ...}' - the call succeeded, and returned a buffer
+* '[...]' - the call succeeded, and returned a package which may contain the
+   above types (integer, string and buffer) and other package types
 
 
 Copyright (c) 2010: Michal Kottman
