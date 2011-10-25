@@ -1,8 +1,15 @@
 A kernel module that enables you to call ACPI methods by writing the method
-name followed by arguments to /proc/acpi/call, for example to turn off discrete
-graphics card in a dual graphics environment (like NVIDIA Optimus).
+name followed by arguments to /proc/acpi/call.
 
 Usage:
+
+    echo '<call>' | sudo tee /proc/acpi/call
+You can then retrieve the result of the call by checking your dmesg or:
+
+    sudo cat /proc/acpi/call
+
+An example to turn off discrete graphics card in a dual graphics environment
+(like NVIDIA Optimus):
 
 # turn off discrete graphics card
 echo '\_SB.PCI0.PEG1.GFX0.DOFF' > /proc/acpi/call
@@ -31,6 +38,8 @@ The status after a call can be read back from /proc/acpi/call:
 * '0xNN' - the call succeeded, and returned an integer
 * '"..."' - the call succeeded, and returned a string
 * '{0xNN, ...}' - the call succeeded, and returned a buffer
+* '[...]' - the call succeeded, and returned a package which may contain the
+   above types (integer, string and buffer) and other package types
 
 
 Copyright (c) 2010: Michal Kottman
