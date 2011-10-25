@@ -8,6 +8,22 @@ You can then retrieve the result of the call by checking your dmesg or:
 
     sudo cat /proc/acpi/call
 
+An example to turn off discrete graphics card in a dual graphics environment
+(like NVIDIA Optimus):
+
+# turn off discrete graphics card
+echo '\_SB.PCI0.PEG1.GFX0.DOFF' > /proc/acpi/call
+# turn it back on
+echo '\_SB.PCI0.PEG1.GFX0.DON' > /proc/acpi/call
+
+These work on my ASUS K52J notebook, but may not work for you. For a list of
+methods to try, see http://linux-hybrid-graphics.blogspot.com/ or try running
+the provided script test_off.sh
+
+It SHOULD be ok to test all of the methods, until you see a drop in battery
+drain rate (grep rate /proc/acpi/battery/BAT0/state), however it comes
+with NO WARRANTY.
+
 You can pass parameters to acpi_call by writing them after the method,
 separated by single space. Currently, you can pass the following parameter
 types:
