@@ -10,6 +10,9 @@ default:
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
+install:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
+
 load:
 	-/sbin/rmmod acpi_call
 	/sbin/insmod acpi_call.ko
