@@ -39,7 +39,7 @@ echo -n "Trying $m: "
         ;;
         *)
             echo "works!"
-            break
+            #break
         ;;
         esac
 done
