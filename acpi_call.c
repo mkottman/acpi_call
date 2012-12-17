@@ -9,7 +9,13 @@
 
 MODULE_LICENSE("GPL");
 
+/* Uncomment the following line to enable debug messages */
+/*
+#define DEBUG
+*/
+
 #define BUFFER_SIZE 256
+#define MAX_ACPI_ARGS 16
 
 extern struct proc_dir_entry *acpi_root_dir;
 
@@ -23,6 +29,7 @@ static size_t get_avail_bytes(void) {
 static char *get_buffer_end(void) {
     return result_buffer + strlen(result_buffer);
 }
+
 /** Appends the contents of an acpi_object to the result buffer
 @param result   An acpi object holding result data
 @returns        0 if the result could fully be saved, a higher value otherwise
@@ -87,7 +94,9 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     struct acpi_object_list arg;
     struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
+#ifdef DEBUG
     printk(KERN_INFO "acpi_call: Calling %s\n", method);
+#endif
 
     // get the handle of the method, must be a fully qualified path
     status = acpi_get_handle(NULL, (acpi_string) method, &handle);
@@ -117,7 +126,9 @@ static void do_acpi_call(const char * method, int argc, union acpi_object *argv)
     acpi_result_to_string(buffer.pointer);
     kfree(buffer.pointer);
 
+#ifdef DEBUG
     printk(KERN_INFO "acpi_call: Call successful: %s\n", result_buffer);
+#endif
 }
 
 /** Decodes 2 hex characters to an u8 int
@@ -146,7 +157,7 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
     if (*s == 0)
         return input;
     
-    *args = (union acpi_object *) kmalloc(16 * sizeof(union acpi_object), GFP_KERNEL);
+    *args = (union acpi_object *) kmalloc(MAX_ACPI_ARGS * sizeof(union acpi_object), GFP_KERNEL);
 
     while (*s) {
         if (*s == ' ') {
@@ -290,8 +301,11 @@ static int acpi_proc_read(char *page, char **start, off_t off,
         return 0;
     }
 
+    // output the current result buffer
     len = strlen(result_buffer);
     memcpy(page, result_buffer, len + 1);
+    
+    // initialize the result buffer for later
     strcpy(result_buffer, "not called");
 
     return len;
@@ -311,7 +325,10 @@ static int __init init_acpi_call(void)
 
     acpi_entry->write_proc = acpi_proc_write;
     acpi_entry->read_proc = acpi_proc_read;
+
+#ifdef DEBUG
     printk(KERN_INFO "acpi_call: Module loaded successfully\n");
+#endif
 
     return 0;
 }
@@ -319,7 +336,10 @@ static int __init init_acpi_call(void)
 static void __exit unload_acpi_call(void)
 {
     remove_proc_entry("call", acpi_root_dir);
+
+#ifdef DEBUG
     printk(KERN_INFO "acpi_call: Module unloaded successfully\n");
+#endif
 }
 
 module_init(init_acpi_call);

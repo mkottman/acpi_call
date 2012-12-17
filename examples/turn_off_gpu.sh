@@ -27,23 +27,26 @@ methods="
 \_SB.PCI0.LPC.EC.PUBS._OFF
 \_SB.PCI0.P0P2.NVID._OFF
 \_SB.PCI0.P0P2.VGA.PX02
+\_SB_.PCI0.PEGP.DGFX._OFF
+\_SB_.PCI0.VGA.PX02
 "
 
-    for m in $methods; do
-echo -n "Trying $m: "
-        echo $m > /proc/acpi/call
-        result=$(cat /proc/acpi/call)
-        case "$result" in
+for m in $methods; do
+    echo -n "Trying $m: "
+    echo $m > /proc/acpi/call
+    result=$(cat /proc/acpi/call)
+    case "$result" in
         Error*)
             echo "failed"
         ;;
         *)
             echo "works!"
-            #break
+            # break # try out outher methods too
         ;;
-        esac
+    esac
 done
+
 else
-echo 'The acpi_call module is not loaded'
+    echo "The acpi_call module is not loaded, try running 'modprobe acpi_call' or 'insmod acpi_call.ko' as root"
     exit 1
 fi
