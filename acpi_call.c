@@ -45,7 +45,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         int i;
         // do not store more than data if it does not fit. The first element is
         // just 4 chars, but there is also two bytes from the curly brackets
-        int show_values = min(result->buffer.length, get_avail_bytes() / 6);
+        int show_values = min((size_t)result->buffer.length, get_avail_bytes() / 6);
 
         sprintf(get_buffer_end(), "{");
         for (i = 0; i < show_values; i++)
