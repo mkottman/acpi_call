@@ -5,7 +5,7 @@ This module is to be considered a proof-of-concept and has been superseeded by
 projects like [bbswitch](https://github.com/Bumblebee-Project/bbswitch). It
 allows you to tamper with your system and should be used with caution.
 
-Want to use acpi_call via graphic interface? [Click here](https://github.com/mkottman/acpi_call/edit/master/README.md#graphic-interface)
+Want to use acpi_call via graphic interface? [Click here](https://github.com/mkottman/acpi_call/#graphic-interface)
 
 Usage:
 
