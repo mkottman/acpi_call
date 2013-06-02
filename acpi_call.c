@@ -2,6 +2,7 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
@@ -16,6 +17,10 @@ MODULE_LICENSE("GPL");
 
 #define BUFFER_SIZE 256
 #define MAX_ACPI_ARGS 16
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
+#define HAVE_PROC_CREATE
+#endif
 
 extern struct proc_dir_entry *acpi_root_dir;
 
@@ -45,7 +50,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         int i;
         // do not store more than data if it does not fit. The first element is
         // just 4 chars, but there is also two bytes from the curly brackets
-        int show_values = min(result->buffer.length, get_avail_bytes() / 6);
+        int show_values = min((size_t)result->buffer.length, get_avail_bytes() / 6);
 
         sprintf(get_buffer_end(), "{");
         for (i = 0; i < show_values; i++)
@@ -141,7 +146,7 @@ u8 decodeHex(char *hex) {
 /** Parses method name and arguments
 @param input Input string to be parsed. Modified in the process.
 @param nargs Set to number of arguments parsed (output)
-@param args 
+@param args
 */
 static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 {
@@ -156,7 +161,7 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
     // if no space is found, return 0 arguments
     if (*s == 0)
         return input;
-    
+
     *args = (union acpi_object *) kmalloc(MAX_ACPI_ARGS * sizeof(union acpi_object), GFP_KERNEL);
 
     while (*s) {
@@ -181,10 +186,10 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 char *p = ++s;
                 int len = 0, i;
                 u8 *buf = NULL;
-                
+
                 while (*p && *p!=' ')
                     p++;
-                
+
                 len = p - s;
                 if (len % 2 == 1) {
                     printk(KERN_ERR "acpi_call: buffer arg%d is not multiple of 8 bits\n", *nargs);
@@ -251,8 +256,13 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 
 /** procfs write callback. Called when writing into /proc/acpi/call.
 */
+#ifdef HAVE_PROC_CREATE
+static ssize_t acpi_proc_write( struct file *filp, const char __user *buff,
+    size_t len, loff_t *data )
+#else
 static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
+#endif
 {
     char input[2 * BUFFER_SIZE] = { '\0' };
     union acpi_object *args;
@@ -291,6 +301,32 @@ Returns the last call status:
 - "failed" if the call failed
 - "ok" if the call succeeded
 */
+#ifdef HAVE_PROC_CREATE
+static ssize_t acpi_proc_read( struct file *filp, char __user *buff,
+            size_t count, loff_t *off )
+{
+    ssize_t ret;
+    int len = strlen(result_buffer);
+
+    // output the current result buffer
+    if (copy_to_user(buff, result_buffer, len + 1))
+        return -EFAULT;
+
+    ret = simple_read_from_buffer(buff, count, off, result_buffer, len + 1);
+
+    // initialize the result buffer for later
+    strcpy(result_buffer, "not called");
+
+    return ret;
+}
+
+static struct file_operations proc_acpi_operations = {
+        .owner    = THIS_MODULE,
+        .read     = acpi_proc_read,
+        .write    = acpi_proc_write,
+};
+
+#else
 static int acpi_proc_read(char *page, char **start, off_t off,
     int count, int *eof, void *data)
 {
@@ -304,17 +340,25 @@ static int acpi_proc_read(char *page, char **start, off_t off,
     // output the current result buffer
     len = strlen(result_buffer);
     memcpy(page, result_buffer, len + 1);
-    
+
     // initialize the result buffer for later
     strcpy(result_buffer, "not called");
 
     return len;
 }
+#endif
 
 /** module initialization function */
 static int __init init_acpi_call(void)
 {
+#ifdef HAVE_PROC_CREATE
+    struct proc_dir_entry *acpi_entry = proc_create("call",
+                                                    0660,
+                                                    acpi_root_dir,
+                                                    &proc_acpi_operations);
+#else
     struct proc_dir_entry *acpi_entry = create_proc_entry("call", 0660, acpi_root_dir);
+#endif
 
     strcpy(result_buffer, "not called");
 
@@ -323,8 +367,10 @@ static int __init init_acpi_call(void)
       return -ENOMEM;
     }
 
+#ifndef HAVE_PROC_CREATE
     acpi_entry->write_proc = acpi_proc_write;
     acpi_entry->read_proc = acpi_proc_read;
+#endif
 
 #ifdef DEBUG
     printk(KERN_INFO "acpi_call: Module loaded successfully\n");
