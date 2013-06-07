@@ -309,9 +309,6 @@ static ssize_t acpi_proc_read( struct file *filp, char __user *buff,
     int len = strlen(result_buffer);
 
     // output the current result buffer
-    if (copy_to_user(buff, result_buffer, len + 1))
-        return -EFAULT;
-
     ret = simple_read_from_buffer(buff, count, off, result_buffer, len + 1);
 
     // initialize the result buffer for later
