@@ -30,6 +30,7 @@ methods="
 \_SB_.PCI0.PEGP.DGFX._OFF
 \_SB_.PCI0.VGA.PX02
 \_SB.PCI0.PEG0.PEGP.SGOF
+\_SB.PCI0.AGP.VGA.PX02
 "
 
 for m in $methods; do
