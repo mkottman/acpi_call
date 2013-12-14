@@ -5,6 +5,8 @@ This module is to be considered a proof-of-concept and has been superseeded by
 projects like [bbswitch](https://github.com/Bumblebee-Project/bbswitch). It
 allows you to tamper with your system and should be used with caution.
 
+Want to use acpi_call via graphic interface? [Click here](https://github.com/mkottman/acpi_call/#graphic-interface)
+
 Usage:
 
     echo '<call>' | sudo tee /proc/acpi/call
@@ -48,6 +50,15 @@ The status after a call can be read back from `/proc/acpi/call`:
 * '[...]' - the call succeeded, and returned a package which may contain the
    above types (integer, string and buffer) and other package types
 
+
+#### Graphic interface
+
+Found this too difficult? Try to use these programs provided by Marco Dalla Libera and do it via graphic interface:
+
+* [acpi_call_GUI (Ubuntu and other debian-based distributions)](http://marcodallas.github.io/acpi_call_GUI/)
+* [acpi_call_GUI_Fedora (Fedora version)](https://github.com/marcoDallas/acpi_call_GUI_Fedora)
+
+***
 
 Copyright (c) 2010: Michal Kottman
 
