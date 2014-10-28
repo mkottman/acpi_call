@@ -1,12 +1,12 @@
 /* Copyright (c) 2010: Michal Kottman */
 
+#include <linux/acpi.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-#include <acpi/acpi.h>
 
 MODULE_LICENSE("GPL");
 
