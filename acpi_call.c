@@ -6,7 +6,7 @@
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-#include <acpi/acpi.h>
+#include <linux/acpi.h>
 
 MODULE_LICENSE("GPL");
 
@@ -270,7 +270,11 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     char *method;
 
     if (len > sizeof(input) - 1) {
+#ifdef HAVE_PROC_CREATE
+        printk(KERN_ERR "acpi_call: Input too long! (%u)\n", len);
+#else
         printk(KERN_ERR "acpi_call: Input too long! (%lu)\n", len);
+#endif
         return -ENOSPC;
     }
 
