@@ -1,5 +1,7 @@
 /* Copyright (c) 2010: Michal Kottman */
 
+#define BUILDING_ACPICA
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/version.h>
