@@ -11,7 +11,7 @@ VERSION=3.17
 chown -R root:root .
 chmod -R og-w .
 
-make clean && make install
+make clean && make && make install
 
 mkdir -vpm755 /usr/doc/${PACKAGE}-${VERSION}
 cp -favv README.md examples support /usr/doc/${PACKAGE}-${VERSION}
