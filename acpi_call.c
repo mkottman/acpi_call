@@ -56,7 +56,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         // just 4 chars, but there is also two bytes from the curly brackets
         int show_values = min((size_t)result->buffer.length, get_avail_bytes() / 6);
 
-        sprintf(get_buffer_end(), "{");
+        snprintf(get_buffer_end(), get_avail_bytes(), "{");
         for (i = 0; i < show_values; i++)
             sprintf(get_buffer_end(),
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
@@ -72,7 +72,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         }
     } else if (result->type == ACPI_TYPE_PACKAGE) {
         int i;
-        sprintf(get_buffer_end(), "[");
+        snprintf(get_buffer_end(), get_avail_bytes(), "[");
         for (i=0; i<result->package.count; i++) {
             if (i > 0)
                 snprintf(get_buffer_end(), get_avail_bytes(), ", ");
