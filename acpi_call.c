@@ -168,6 +168,10 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
         return input;
 
     *args = (union acpi_object *) kmalloc(MAX_ACPI_ARGS * sizeof(union acpi_object), GFP_KERNEL);
+    if (!*args) {
+        printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+        return NULL;
+    }
 
     while (*s) {
         if (*s == ' ') {
@@ -205,6 +209,11 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 len /= 2;
 
                 buf = (u8*) kmalloc(len, GFP_KERNEL);
+                if (!buf) {
+                    printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+                    --*nargs;
+                    goto err;
+                }
                 for (i=0; i<len; i++) {
                     buf[i] = decodeHex(s + i*2);
                 }
@@ -241,6 +250,11 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 }
                 // store the result in new allocated buffer
                 buf = (u8*) kmalloc(arg->buffer.length, GFP_KERNEL);
+                if (!buf) {
+                    printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+                    --*nargs;
+                    goto err;
+                }
                 memcpy(buf, temporary_buffer, arg->buffer.length);
                 arg->buffer.pointer = buf;
             } else {
