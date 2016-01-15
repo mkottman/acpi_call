@@ -184,7 +184,8 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 while (*s && *s++ != '"')
                     arg->string.length ++;
                 // skip the last "
-                ++s;
+                if (*s == '"')
+                    ++s;
             } else if (*s == 'b') {
                 // decode buffer - bXXXX
                 char *p = ++s;
