@@ -1,12 +1,16 @@
 /* Copyright (c) 2010: Michal Kottman */
 
-#include <linux/acpi.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#include <linux/acpi.h>
+#else
+#include <acpi/acpi.h>
+#endif
 
 MODULE_LICENSE("GPL");
 
