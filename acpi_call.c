@@ -155,6 +155,7 @@ u8 decodeHex(char *hex) {
 static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 {
     char *s = input;
+    int i;
 
     *nargs = 0;
     *args = NULL;
@@ -198,7 +199,8 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 len = p - s;
                 if (len % 2 == 1) {
                     printk(KERN_ERR "acpi_call: buffer arg%d is not multiple of 8 bits\n", *nargs);
-                    return NULL;
+                    --*nargs;
+                    goto err;
                 }
                 len /= 2;
 
@@ -257,6 +259,13 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
     }
 
     return input;
+
+err:
+    for (i=0; i<*nargs; i++)
+        if ((*args)[i].type == ACPI_TYPE_BUFFER && (*args)[i].buffer.pointer)
+            kfree((*args)[i].buffer.pointer);
+    kfree(*args);
+    return NULL;
 }
 
 /** procfs write callback. Called when writing into /proc/acpi/call.
