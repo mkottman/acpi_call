@@ -1,12 +1,16 @@
 /* Copyright (c) 2010: Michal Kottman */
 
-#include <linux/acpi.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#include <linux/acpi.h>
+#else
+#include <acpi/acpi.h>
+#endif
 
 MODULE_LICENSE("GPL");
 
@@ -52,7 +56,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         // just 4 chars, but there is also two bytes from the curly brackets
         int show_values = min((size_t)result->buffer.length, get_avail_bytes() / 6);
 
-        sprintf(get_buffer_end(), "{");
+        snprintf(get_buffer_end(), get_avail_bytes(), "{");
         for (i = 0; i < show_values; i++)
             sprintf(get_buffer_end(),
                 i == 0 ? "0x%02x" : ", 0x%02x", result->buffer.pointer[i]);
@@ -68,7 +72,7 @@ static int acpi_result_to_string(union acpi_object *result) {
         }
     } else if (result->type == ACPI_TYPE_PACKAGE) {
         int i;
-        sprintf(get_buffer_end(), "[");
+        snprintf(get_buffer_end(), get_avail_bytes(), "[");
         for (i=0; i<result->package.count; i++) {
             if (i > 0)
                 snprintf(get_buffer_end(), get_avail_bytes(), ", ");
@@ -151,6 +155,7 @@ u8 decodeHex(char *hex) {
 static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
 {
     char *s = input;
+    int i;
 
     *nargs = 0;
     *args = NULL;
@@ -163,6 +168,10 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
         return input;
 
     *args = (union acpi_object *) kmalloc(MAX_ACPI_ARGS * sizeof(union acpi_object), GFP_KERNEL);
+    if (!*args) {
+        printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+        return NULL;
+    }
 
     while (*s) {
         if (*s == ' ') {
@@ -180,7 +189,8 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 while (*s && *s++ != '"')
                     arg->string.length ++;
                 // skip the last "
-                ++s;
+                if (*s == '"')
+                    ++s;
             } else if (*s == 'b') {
                 // decode buffer - bXXXX
                 char *p = ++s;
@@ -193,11 +203,17 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 len = p - s;
                 if (len % 2 == 1) {
                     printk(KERN_ERR "acpi_call: buffer arg%d is not multiple of 8 bits\n", *nargs);
-                    return NULL;
+                    --*nargs;
+                    goto err;
                 }
                 len /= 2;
 
                 buf = (u8*) kmalloc(len, GFP_KERNEL);
+                if (!buf) {
+                    printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+                    --*nargs;
+                    goto err;
+                }
                 for (i=0; i<len; i++) {
                     buf[i] = decodeHex(s + i*2);
                 }
@@ -234,6 +250,11 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
                 }
                 // store the result in new allocated buffer
                 buf = (u8*) kmalloc(arg->buffer.length, GFP_KERNEL);
+                if (!buf) {
+                    printk(KERN_ERR "acpi_call: unable to allocate buffer\n");
+                    --*nargs;
+                    goto err;
+                }
                 memcpy(buf, temporary_buffer, arg->buffer.length);
                 arg->buffer.pointer = buf;
             } else {
@@ -252,6 +273,13 @@ static char *parse_acpi_args(char *input, int *nargs, union acpi_object **args)
     }
 
     return input;
+
+err:
+    for (i=0; i<*nargs; i++)
+        if ((*args)[i].type == ACPI_TYPE_BUFFER && (*args)[i].buffer.pointer)
+            kfree((*args)[i].buffer.pointer);
+    kfree(*args);
+    return NULL;
 }
 
 /** procfs write callback. Called when writing into /proc/acpi/call.
