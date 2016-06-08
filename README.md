@@ -55,8 +55,8 @@ The status after a call can be read back from `/proc/acpi/call`:
 
 Found this too difficult? Try to use these programs provided by Marco Dalla Libera and do it via graphic interface:
 
-* [acpi_call_GUI (Ubuntu and his derivates)](http://marcodallas.github.io/acpi_call_GUI/)
-* [acpi_call_GUI_systemd (all linux distros that support systemd: Fedora, Arch, Mandriva etc.)](https://github.com/marcoDallas/acpi_call_GUI_systemd)
+* [acpi_call_GUI (Ubuntu and his derivates)](https://github.com/marcoDallas/acpi_call_GUI)
+* [acpi_call_GUI_systemd (all linux distros that support systemd: Ubuntu 16.04+, Fedora, Arch, Mandriva etc.)](https://github.com/marcoDallas/acpi_call_GUI_systemd)
 
 ***
 
