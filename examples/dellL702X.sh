@@ -1,7 +1,7 @@
 #!/bin/sh
 # Power control for Dell L702X
 # by Jos Hickson
-# adapted from "Power control for Asus 1215N Optimus by Pete Eberlein"
+# adapted from "Power control for DELL XPS L702X by Pete Eberlein"
 
 if ! lsmod | grep -q acpi_call; then
     echo "Error: acpi_call module not loaded"
