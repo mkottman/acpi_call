@@ -1,0 +1,22 @@
+#!/bin/sh
+
+PACKAGE=acpi_call
+ORIGPATH=$PWD
+
+cd $SLACKTRACKSCRATCHDIR
+cp -r $ORIGPATH/* .
+
+KERNEL=${KERNEL:-"$(uname -r)"}
+VERSION=3.17
+chown -R root:root .
+chmod -R og-w .
+
+make clean && make && make install
+
+mkdir -vpm755 /usr/doc/${PACKAGE}-${VERSION}
+cp -favv README.md examples support /usr/doc/${PACKAGE}-${VERSION}
+
+rm -fr /install
+mkdir -vpm755 /install
+cat ${ORIGPATH}/slack-desc > /install/slack-desc
+sed "s%@KERNEL@%$KERNEL%" ${ORIGPATH}/doinst.sh > /install/doinst.sh

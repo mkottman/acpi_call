@@ -1,11 +1,11 @@
-A kernel simple module that enables you to call ACPI methods by writing the
-method name followed by arguments to `/proc/acpi/call`.
+A simple kernel module that allows one to call ACPI methods by writing the
+method name followed by its arguments to `/proc/acpi/call`.
 
-This module is to be considered a proof-of-concept and has been superseeded by
+This module is to be considered a proof-of-concept, and has been superseded by
 projects like [bbswitch](https://github.com/Bumblebee-Project/bbswitch). It
 allows you to tamper with your system and should be used with caution.
 
-Want to use acpi_call via graphic interface? [Click here](https://github.com/mkottman/acpi_call/#graphic-interface)
+Want to use acpi_call via a graphical interface? [Click here](https://github.com/mkottman/acpi_call/#graphic-interface)
 
 Usage:
 
@@ -15,8 +15,8 @@ You can then retrieve the result of the call by checking your dmesg or:
 
     sudo cat /proc/acpi/call
 
-An example to turn off discrete graphics card in a dual graphics environment
-(like NVIDIA Optimus):
+An example to turn off the discrete graphics card in a dual graphics
+environment (like NVIDIA Optimus):
 
     # turn off discrete graphics card
     echo '\_SB.PCI0.PEG1.GFX0.DOFF' > /proc/acpi/call
@@ -55,8 +55,8 @@ The status after a call can be read back from `/proc/acpi/call`:
 
 Found this too difficult? Try to use these programs provided by Marco Dalla Libera and do it via graphic interface:
 
-* [acpi_call_GUI (Ubuntu and other debian-based distributions)](http://marcodallas.github.io/acpi_call_GUI/)
-* [acpi_call_GUI_Fedora (Fedora version)](https://github.com/marcoDallas/acpi_call_GUI_Fedora)
+* [acpi_call_GUI (Ubuntu and his derivates)](https://github.com/marcoDallas/acpi_call_GUI)
+* [acpi_call_GUI_systemd (all linux distros that support systemd: Ubuntu 16.04+, Fedora, Arch, Mandriva etc.)](https://github.com/marcoDallas/acpi_call_GUI_systemd)
 
 ***
 
