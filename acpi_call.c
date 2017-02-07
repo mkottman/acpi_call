@@ -6,7 +6,12 @@
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-#include <acpi/acpi.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
+    #include <linux/acpi.h>
+#else
+    #include <acpi/acpi.h>
+#endif
 
 MODULE_LICENSE("GPL");
 
