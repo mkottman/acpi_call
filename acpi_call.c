@@ -7,6 +7,7 @@
 #include <linux/slab.h>
 #include <asm/uaccess.h>
 #include <acpi/acpi.h>
+#include <linux/unaccess.h>
 
 MODULE_LICENSE("GPL");
 
