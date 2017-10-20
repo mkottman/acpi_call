@@ -279,7 +279,7 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
         return -ENOSPC;
     }
 
-    if (copy_from_user( input, buff, len )) {
+    if (raw_copy_from_user( input, buff, len )) {
         return -EFAULT;
     }
     input[len] = '\0';
