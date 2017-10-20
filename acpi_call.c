@@ -6,7 +6,12 @@
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-#include <acpi/acpi.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
+    #include <linux/acpi.h>
+#else
+    #include <acpi/acpi.h>
+#endif
 
 MODULE_LICENSE("GPL");
 
@@ -274,7 +279,7 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
         return -ENOSPC;
     }
 
-    if (copy_from_user( input, buff, len )) {
+    if (raw_copy_from_user( input, buff, len )) {
         return -EFAULT;
     }
     input[len] = '\0';
