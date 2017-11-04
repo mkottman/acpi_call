@@ -7,6 +7,7 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
+#include <linux/uaccess.h>
 #include <asm/uaccess.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
 #include <linux/acpi.h>
