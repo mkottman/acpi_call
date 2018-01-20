@@ -5,8 +5,13 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#include <linux/uaccess.h>
+#include <linux/acpi.h>
+#else
 #include <asm/uaccess.h>
 #include <acpi/acpi.h>
+#endif
 
 MODULE_LICENSE("GPL");
 
