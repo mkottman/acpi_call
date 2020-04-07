@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if lsmod | grep -q acpi_call; then
 methods="
@@ -36,8 +36,8 @@ methods="
 "
 
 for m in $methods; do
-    echo -n "Trying $m: "
-    echo $m > /proc/acpi/call
+    printf "Trying %s: " "$m"
+    echo "$m" > /proc/acpi/call
     result=$(cat /proc/acpi/call)
     case "$result" in
         Error*)
