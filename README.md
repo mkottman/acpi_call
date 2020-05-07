@@ -1,3 +1,7 @@
+# acpi\_call
+This is a fork of [acpi_call](https://github.com/mkottman/acpi_call) maintained by the NixOS community.
+Patches also for non-NixOS related fixes are welcome!
+
 A simple kernel module that allows one to call ACPI methods by writing the
 method name followed by its arguments to `/proc/acpi/call`.
 

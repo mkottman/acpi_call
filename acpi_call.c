@@ -303,7 +303,11 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     char *method;
 
     if (len > sizeof(input) - 1) {
+#ifdef HAVE_PROC_CREATE
+        printk(KERN_ERR "acpi_call: Input too long! (%u)\n", len);
+#else
         printk(KERN_ERR "acpi_call: Input too long! (%lu)\n", len);
+#endif
         return -ENOSPC;
     }
 
@@ -321,9 +325,10 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
             for (i=0; i<nargs; i++)
                 if (args[i].type == ACPI_TYPE_BUFFER)
                     kfree(args[i].buffer.pointer);
-            kfree(args);
         }
     }
+    if (args)
+        kfree(args);
 
     return len;
 }
