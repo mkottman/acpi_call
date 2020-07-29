@@ -34,6 +34,7 @@ MODULE_LICENSE("GPL");
 extern struct proc_dir_entry *acpi_root_dir;
 
 static char result_buffer[BUFFER_SIZE];
+static char not_called_message[11] = "not called";
 
 static u8 temporary_buffer[BUFFER_SIZE];
 
@@ -346,11 +347,20 @@ static ssize_t acpi_proc_read( struct file *filp, char __user *buff,
     ssize_t ret;
     int len = strlen(result_buffer);
 
-    // output the current result buffer
-    ret = simple_read_from_buffer(buff, count, off, result_buffer, len + 1);
-
-    // initialize the result buffer for later
-    strcpy(result_buffer, "not called");
+    if(len == 0) {
+        ret = simple_read_from_buffer(buff, count, off, not_called_message, strlen(not_called_message) + 1);
+    } else if(len + 1 > count) {
+        // user buffer is too small
+        ret = 0;
+    } else if(*off == len + 1) {
+        // we're done
+        ret = 0;
+        result_buffer[0] = '\0';
+    } else {
+        // output the current result buffer
+        ret = simple_read_from_buffer(buff, count, off, result_buffer, len + 1);
+        *off = ret;
+    }
 
     return ret;
 }
