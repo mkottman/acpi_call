@@ -36,7 +36,7 @@ methods="
 for m in $methods; do
     echo -n "Trying $m: "
     echo $m > /proc/acpi/call
-    result=$(cat /proc/acpi/call)
+    result=$(tr -d '\0' </proc/acpi/call)
     case "$result" in
         Error*)
             echo "failed"
