@@ -5,13 +5,13 @@ Patches also for non-NixOS related fixes are welcome!
 A simple kernel module that allows one to call ACPI methods by writing the
 method name followed by its arguments to `/proc/acpi/call`.
 
-This module is to be considered a proof-of-concept, and has been superseded by
-projects like [bbswitch](https://github.com/Bumblebee-Project/bbswitch). It
-allows you to tamper with your system and should be used with caution.
+## Notes on dkms and Secure Boot
 
-Want to use acpi_call via a graphical interface? [Click here](https://github.com/mkottman/acpi_call/#graphic-interface)
+If that is the way you want to install this module, you can follow 
+[this guide](https://gist.github.com/dop3j0e/2a9e2dddca982c4f679552fc1ebb18df) 
+to have dkms automatically sign the module after building.
 
-Usage:
+## Usage
 
     echo '<call>' | sudo tee /proc/acpi/call
 
@@ -55,9 +55,10 @@ The status after a call can be read back from `/proc/acpi/call`:
    above types (integer, string and buffer) and other package types
 
 
-#### Graphic interface
+## GUI Alternatives
 
-Found this too difficult? Try to use these programs provided by Marco Dalla Libera and do it via graphic interface:
+Found this too difficult? Try to use these programs provided by Marco Dalla Libera and do it via graphic interface. **Note that they is not suitable for arbitrary 
+APCI calls but intended for turning off discrete graphics only**.
 
 * [acpi_call_GUI (Ubuntu and his derivates)](https://github.com/marcoDallas/acpi_call_GUI)
 * [acpi_call_GUI_systemd (all linux distros that support systemd: Ubuntu 16.04+, Fedora, Arch, Mandriva etc.)](https://github.com/marcoDallas/acpi_call_GUI_systemd)
