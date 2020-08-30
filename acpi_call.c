@@ -305,7 +305,7 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
 
     if (len > sizeof(input) - 1) {
 #ifdef HAVE_PROC_CREATE
-        printk(KERN_ERR "acpi_call: Input too long! (%u)\n", len);
+        printk(KERN_ERR "acpi_call: Input too long! (%zu)\n", len);
 #else
         printk(KERN_ERR "acpi_call: Input too long! (%lu)\n", len);
 #endif
