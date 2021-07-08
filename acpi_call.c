@@ -369,6 +369,9 @@ static ssize_t acpi_proc_read( struct file *filp, char __user *buff,
 static struct proc_ops proc_acpi_operations = {
 	.proc_read = acpi_proc_read,
 	.proc_write = acpi_proc_write,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 13, 0)
+	.proc_lseek = default_llseek,
+#endif
 };
 #else
 static struct file_operations proc_acpi_operations = {
