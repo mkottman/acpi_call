@@ -9,3 +9,4 @@ MANIFEST
 Module.symvers
 debian/tmp/*
 modules.order
+dkms.conf

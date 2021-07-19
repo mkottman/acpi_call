@@ -17,16 +17,19 @@ load:
 	-/sbin/rmmod acpi_call
 	/sbin/insmod acpi_call.ko
 
-dkms-add:
+dkms.conf: dkms.conf.in
+	sed "s/@@VERSION@@/$(VERSION)/" $^ > $@
+
+dkms-add: dkms.conf
 	/usr/sbin/dkms add $(CURDIR)
 
-dkms-build:
+dkms-build: dkms.conf
 	/usr/sbin/dkms build acpi_call/$(VERSION)
 
-dkms-install:
+dkms-install: dkms.conf
 	/usr/sbin/dkms install acpi_call/$(VERSION)
 
-dkms-remove:
+dkms-remove: dkms.conf
 	/usr/sbin/dkms remove acpi_call/$(VERSION) --all
 
 modprobe-install:
