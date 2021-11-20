@@ -8,7 +8,7 @@ method name followed by its arguments to `/proc/acpi/call`.
 ## Notes on dkms and Secure Boot
 
 If that is the way you want to install this module, you can follow 
-[this guide](https://gist.github.com/dop3j0e/2a9e2dddca982c4f679552fc1ebb18df) 
+[this guide](https://web.archive.org/web/20210215173902/https://gist.github.com/dop3j0e/2a9e2dddca982c4f679552fc1ebb18df) ([mirror](https://gist.github.com/s-h-a-d-o-w/53c2215e955c3326c6ec8f812a0d2f27))
 to have dkms automatically sign the module after building.
 
 ## Usage
