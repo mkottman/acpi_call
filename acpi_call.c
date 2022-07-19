@@ -24,7 +24,8 @@ MODULE_LICENSE("GPL");
 #define DEBUG
 */
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 4096
+#define INPUT_BUFFER_SIZE (2 * BUFFER_SIZE)
 #define MAX_ACPI_ARGS 16
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
@@ -33,6 +34,7 @@ MODULE_LICENSE("GPL");
 
 extern struct proc_dir_entry *acpi_root_dir;
 
+static char input_buffer[INPUT_BUFFER_SIZE];
 static char result_buffer[BUFFER_SIZE];
 static char not_called_message[11] = "not called";
 
@@ -298,12 +300,12 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
     unsigned long len, void *data )
 #endif
 {
-    char input[2 * BUFFER_SIZE] = { '\0' };
     union acpi_object *args;
     int nargs, i;
     char *method;
 
-    if (len > sizeof(input) - 1) {
+    memset(input_buffer, 0, INPUT_BUFFER_SIZE);
+    if (len > sizeof(input_buffer) - 1) {
 #ifdef HAVE_PROC_CREATE
         printk(KERN_ERR "acpi_call: Input too long! (%zu)\n", len);
 #else
@@ -312,14 +314,14 @@ static int acpi_proc_write( struct file *filp, const char __user *buff,
         return -ENOSPC;
     }
 
-    if (copy_from_user( input, buff, len )) {
+    if (copy_from_user( input_buffer, buff, len )) {
         return -EFAULT;
     }
-    input[len] = '\0';
-    if (input[len-1] == '\n')
-        input[len-1] = '\0';
+    input_buffer[len] = '\0';
+    if (input_buffer[len-1] == '\n')
+        input_buffer[len-1] = '\0';
 
-    method = parse_acpi_args(input, &nargs, &args);
+    method = parse_acpi_args(input_buffer, &nargs, &args);
     if (method) {
         do_acpi_call(method, nargs, args);
         if (args) {
