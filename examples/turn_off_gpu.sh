@@ -31,6 +31,7 @@ methods="
 \_SB_.PCI0.VGA.PX02
 \_SB.PCI0.PEG0.PEGP.SGOF
 \_SB.PCI0.AGP.VGA.PX02
+\_SB_.PC00.PEG1.PEGP._PS3
 "
 
 for m in $methods; do
